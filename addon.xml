@@ -2,15 +2,14 @@
 <addon id="service.subtitles.localsubs" name="Local subtitles" version="0.0.1" provider-name="crash">
   <requires>
     <import addon="xbmc.python" version="3.0.0"/>
-    <import addon="vfs.libarchive" version="2.0.0"/>
   </requires>
   <extension point="xbmc.subtitle.module" library="service.py" />
   <extension point="xbmc.addon.metadata">
     <summary lang="en_GB">Local subtitles</summary>
-    <description lang="en_GB">Local subtitles with differend names and location</description>
+    <description lang="en_GB">Local subtitles with different names and location</description>
     <platform>all</platform>
     <license>GPL-2.0-or-later</license>
-    <email>no at none dot com</email>
+    <email>none at none dot com</email>
     <source>https://github.com/crash5/service.subtitles.localsubs</source>
   </extension>
 </addon>
