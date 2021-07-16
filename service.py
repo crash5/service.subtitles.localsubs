@@ -62,6 +62,7 @@ def loginfos():
 
 def search():
     # file_path = os.path.dirname(xbmc.Player().getPlayingFile())
+
     # upper_sub_dir = os.path.dirname(file_path) + '/subs'
     upper_sub_dir = '/storage/subs'
     (dirs, files) = xbmcvfs.listdir(upper_sub_dir)
@@ -69,7 +70,6 @@ def search():
     # debuglog(files)
     for file in files:
         dl_url = os.path.join(upper_sub_dir, file)
-
 
         qparams = urlencode({
             'action': 'download',
@@ -88,6 +88,8 @@ def cleanup_temp():
         (dirs, files) = xbmcvfs.listdir(__temp__)
         for file in files:
             xbmcvfs.delete(path.join(__temp__, file))
+        for dir in dirs:
+            xbmcvfs.rmdir(path.join(__temp__, dir), force=True)
     else:
         xbmcvfs.mkdirs(__temp__)
 
