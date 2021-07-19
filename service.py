@@ -60,26 +60,36 @@ def loginfos():
     debuglog(xbmc.getInfoLabel("VideoPlayer.Episode"))
     debuglog(xbmc.getCleanMovieTitle(xbmc.Player().getPlayingFile(), True))
 
+
 def search():
     # file_path = os.path.dirname(xbmc.Player().getPlayingFile())
-
+    # file_name = xbmc.getInfoLabel("VideoPlayer.Title")
+    file_name = xbmc.getCleanMovieTitle(xbmc.Player().getPlayingFile(), True)
     # upper_sub_dir = os.path.dirname(file_path) + '/subs'
     upper_sub_dir = '/storage/subs'
     (dirs, files) = xbmcvfs.listdir(upper_sub_dir)
     # debuglog(dirs)
     # debuglog(files)
-    for file in files:
-        dl_url = os.path.join(upper_sub_dir, file)
 
-        qparams = urlencode({
-            'action': 'download',
-            'url': dl_url})
-        url = f'plugin://{__scriptid__}/?{qparams}'
+    sorted_names = sorted(
+        files,
+        key=lambda x: longes_common_subsequence(file_name[0], x)[0])
 
-        listitem = xbmcgui.ListItem(file)
+
+    for file in reversed(sorted_names):
+        location = os.path.join(upper_sub_dir, file)
+
+        # qparams = urlencode({
+        #     'action': 'download',
+        #     'url': dl_url})
+        # url = f'plugin://{__scriptid__}/?{qparams}'
+
+        listitem = xbmcgui.ListItem(
+            label='English',
+            label2=file)
         xbmcplugin.addDirectoryItem(
             handle=__addon_handle__,
-            url=url,
+            url=location,
             listitem=listitem)
 
 
@@ -129,7 +139,7 @@ def longes_common_subsequence(s1, s2):
 
 if __name__ == '__main__':
     params = get_params()
-    debuglog(sys.argv)
+    # debuglog(sys.argv)
     # loginfos()
 
     if params['action'] == 'search':
