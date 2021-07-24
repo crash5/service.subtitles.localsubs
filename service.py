@@ -79,17 +79,17 @@ def search():
     for file in reversed(sorted_names):
         location = os.path.join(upper_sub_dir, file)
 
-        # qparams = urlencode({
-        #     'action': 'download',
-        #     'url': dl_url})
-        # url = f'plugin://{__scriptid__}/?{qparams}'
+        qparams = urlencode({
+            'action': 'download',
+            'url': location})
+        url = f'plugin://{__scriptid__}/?{qparams}'
 
         listitem = xbmcgui.ListItem(
             label='English',
             label2=file)
         xbmcplugin.addDirectoryItem(
             handle=__addon_handle__,
-            url=location,
+            url=url,
             listitem=listitem)
 
 
@@ -97,26 +97,22 @@ def cleanup_temp():
     if xbmcvfs.exists(__temp__):
         (dirs, files) = xbmcvfs.listdir(__temp__)
         for file in files:
-            xbmcvfs.delete(path.join(__temp__, file))
+            xbmcvfs.delete(os.path.join(__temp__, file))
         for dir in dirs:
-            xbmcvfs.rmdir(path.join(__temp__, dir), force=True)
+            xbmcvfs.rmdir(os.path.join(__temp__, dir), force=True)
     else:
         xbmcvfs.mkdirs(__temp__)
 
 
 def download(url):
-    debuglog('download')
+    # debuglog('download')
     # loginfos()
     cleanup_temp()
 
-    destination_file = os.path.join(__temp__, 'sadtest.srt') 
-
-    xbmcvfs.copy(url, destination_file)
-
-    listitem = xbmcgui.ListItem('letoltott')
+    listitem = xbmcgui.ListItem(label=url)
     xbmcplugin.addDirectoryItem(
         handle=__addon_handle__,
-        url=destination_file,
+        url=url,
         listitem=listitem)
 
 
@@ -146,7 +142,7 @@ if __name__ == '__main__':
         search()
     elif params['action'] == 'download':
         url = unquote_plus(params['url'])
-        debuglog(url)
+        # debuglog(url)
         download(url)
 
     # ?action=search&languages=English&preferredlanguage=English
