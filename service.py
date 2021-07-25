@@ -8,7 +8,7 @@ import xbmcvfs
 import xbmcplugin
 import xbmcgui
 
-from urllib.parse import urlencode, unquote_plus
+from urllib.parse import urlencode, unquote_plus, parse_qsl
 
 
 __addon__ = xbmcaddon.Addon()
@@ -27,38 +27,18 @@ __addon_handle__ = int(sys.argv[1])
 def debuglog(msg):
     xbmc.log(u"### [%s] - %s" % (__scriptid__, msg), level=xbmc.LOGINFO)
 
-def get_params(string=""):
-    param = []
-    if string == "":
-        paramstring = sys.argv[2]
-    else:
-        paramstring = string
-    if len(paramstring) >= 2:
-        params = paramstring
-        cleanedparams = params.replace('?', '')
-        if params[len(params) - 1] == '/':
-            params = params[0:len(params) - 2]
-        pairsofparams = cleanedparams.split('&')
-        param = {}
-        for i in range(len(pairsofparams)):
-            splitparams = {}
-            splitparams = pairsofparams[i].split('=')
-            if (len(splitparams)) == 2:
-                param[splitparams[0]] = splitparams[1]
-
-    return param
-
 
 def loginfos():
-    debuglog(params)
-    debuglog(xbmc.getInfoLabel("VideoPlayer.OriginalTitle"))
-    debuglog(xbmc.getInfoLabel("VideoPlayer.Title"))
-    debuglog(xbmc.Player().getPlayingFile())
+    debuglog(f'args: {sys.argv}')
+    debuglog(f'params: {dict(parse_qsl(sys.argv[2][1:]))}')
+    debuglog(f'VideoPlayer.OriginalTitle: {xbmc.getInfoLabel("VideoPlayer.OriginalTitle")}')
+    debuglog(f'VideoPlayer.Title: {xbmc.getInfoLabel("VideoPlayer.Title")}')
+    debuglog(f'Playing file: {xbmc.Player().getPlayingFile()}')
 
-    debuglog(xbmc.getInfoLabel("VideoPlayer.TVshowtitle"))
-    debuglog(xbmc.getInfoLabel("VideoPlayer.Season"))
-    debuglog(xbmc.getInfoLabel("VideoPlayer.Episode"))
-    debuglog(xbmc.getCleanMovieTitle(xbmc.Player().getPlayingFile(), True))
+    debuglog(f'VideoPlayer.TVshowtitle: {xbmc.getInfoLabel("VideoPlayer.TVshowtitle")}')
+    debuglog(f'VideoPlayer.Season: {xbmc.getInfoLabel("VideoPlayer.Season")}')
+    debuglog(f'VideoPlayer.Episode: {xbmc.getInfoLabel("VideoPlayer.Episode")}')
+    debuglog(f'Clean title: {xbmc.getCleanMovieTitle(xbmc.Player().getPlayingFile(), True)}')
 
 
 def search():
@@ -68,8 +48,6 @@ def search():
     # upper_sub_dir = os.path.dirname(file_path) + '/subs'
     upper_sub_dir = '/storage/subs'
     (dirs, files) = xbmcvfs.listdir(upper_sub_dir)
-    # debuglog(dirs)
-    # debuglog(files)
 
     sorted_names = sorted(
         files,
@@ -137,25 +115,22 @@ def longes_common_subsequence(s1, s2):
 
 
 if __name__ == '__main__':
-    params = get_params()
-    # params = dict(urlparse.parse_qsl(sys.argv[2][1:]))
-    # debuglog(sys.argv)
-    # loginfos()
+    params = dict(parse_qsl(sys.argv[2][1:]))
+    loginfos()
 
     if params['action'] == 'search':
         search()
     elif params['action'] == 'download':
         url = unquote_plus(params['url'])
-        # debuglog(url)
         download(url)
 
     # ?action=search&languages=English&preferredlanguage=English
     xbmcplugin.endOfDirectory(__addon_handle__)
 
-# class logger(object):
+# class logger:
 #     @staticmethod
 #     def log(message, level=xbmc.LOGDEBUG):
-#         xbmc.log('{0}: {1}'.format(ADDON_ID, message), level)
+#         xbmc.log(f'{__scriptid__}: {message}', level)
 
 #     @staticmethod
 #     def info(message):
