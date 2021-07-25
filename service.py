@@ -87,6 +87,9 @@ def search():
         listitem = xbmcgui.ListItem(
             label='English',
             label2=file)
+        # list_item.setArt(
+        #     {'thumb': xbmc.convertLanguage(item.language, xbmc.ISO_639_1)}
+        # )
         xbmcplugin.addDirectoryItem(
             handle=__addon_handle__,
             url=url,
@@ -135,6 +138,7 @@ def longes_common_subsequence(s1, s2):
 
 if __name__ == '__main__':
     params = get_params()
+    # params = dict(urlparse.parse_qsl(sys.argv[2][1:]))
     # debuglog(sys.argv)
     # loginfos()
 
@@ -147,3 +151,21 @@ if __name__ == '__main__':
 
     # ?action=search&languages=English&preferredlanguage=English
     xbmcplugin.endOfDirectory(__addon_handle__)
+
+# class logger(object):
+#     @staticmethod
+#     def log(message, level=xbmc.LOGDEBUG):
+#         xbmc.log('{0}: {1}'.format(ADDON_ID, message), level)
+
+#     @staticmethod
+#     def info(message):
+#         logger.log(message, xbmc.LOGINFO)
+
+#     @staticmethod
+#     def error(message):
+#         logger.log(message, xbmc.LOGERROR)
+
+#     @staticmethod
+#     def debug(message):
+#         logger.log(message, xbmc.LOGDEBUG)
+
