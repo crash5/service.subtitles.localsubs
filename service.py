@@ -30,7 +30,6 @@ def debuglog(msg):
 
 def loginfos():
     debuglog(f'args: {sys.argv}')
-    debuglog(f'params: {dict(parse_qsl(sys.argv[2][1:]))}')
     debuglog(f'VideoPlayer.OriginalTitle: {xbmc.getInfoLabel("VideoPlayer.OriginalTitle")}')
     debuglog(f'VideoPlayer.Title: {xbmc.getInfoLabel("VideoPlayer.Title")}')
     debuglog(f'Playing file: {xbmc.Player().getPlayingFile()}')
@@ -44,57 +43,71 @@ def loginfos():
 def search():
     # file_path = os.path.dirname(xbmc.Player().getPlayingFile())
     # file_name = xbmc.getInfoLabel("VideoPlayer.Title")
+    # subtitle_dir = os.path.dirname(file_path) + '/subs'
+
     file_name = xbmc.getCleanMovieTitle(xbmc.Player().getPlayingFile(), True)
-    # upper_sub_dir = os.path.dirname(file_path) + '/subs'
-    upper_sub_dir = '/storage/subs'
-    (dirs, files) = xbmcvfs.listdir(upper_sub_dir)
+
+    subtitle_dir = xbmcvfs.translatePath('special://subtitles')
+    if not xbmcvfs.exists(subtitle_dir):
+        return
+
+    (dirs, files) = xbmcvfs.listdir(subtitle_dir)
 
     sorted_names = sorted(
         files,
-        key=lambda x: longes_common_subsequence(file_name[0], x)[0])
+        key=lambda x: longes_common_subsequence(file_name[0], x)[0],
+        reverse=True)
+
+    for file in sorted_names:
+        location = os.path.join(subtitle_dir, file)
+
+        params = {
+            'action': 'use',
+            'location': location}
+
+        add_directory_item(
+            create_sub_listitem(file),
+            create_plugin_url(params)
+        )
 
 
-    for file in reversed(sorted_names):
-        location = os.path.join(upper_sub_dir, file)
-
-        qparams = urlencode({
-            'action': 'download',
-            'url': location})
-        url = f'plugin://{__scriptid__}/?{qparams}'
-
-        listitem = xbmcgui.ListItem(
-            label='English',
-            label2=file)
-        # list_item.setArt(
-        #     {'thumb': xbmc.convertLanguage(item.language, xbmc.ISO_639_1)}
-        # )
-        xbmcplugin.addDirectoryItem(
-            handle=__addon_handle__,
-            url=url,
-            listitem=listitem)
+# def cleanup_temp():
+#     location = __temp__
+#     if xbmcvfs.exists(location):
+#         (dirs, files) = xbmcvfs.listdir(location)
+#         for file in files:
+#             xbmcvfs.delete(os.path.join(location, file))
+#         for dir in dirs:
+#             xbmcvfs.rmdir(os.path.join(location, dir), force=True)
+#     else:
+#         xbmcvfs.mkdirs(location)
 
 
-def cleanup_temp():
-    if xbmcvfs.exists(__temp__):
-        (dirs, files) = xbmcvfs.listdir(__temp__)
-        for file in files:
-            xbmcvfs.delete(os.path.join(__temp__, file))
-        for dir in dirs:
-            xbmcvfs.rmdir(os.path.join(__temp__, dir), force=True)
-    else:
-        xbmcvfs.mkdirs(__temp__)
+def create_plugin_url(params):
+    return f'plugin://{__scriptid__}/?{urlencode(params)}'
+
+
+def add_directory_item(listitem, url):
+    xbmcplugin.addDirectoryItem(handle=__addon_handle__, url=url, listitem=listitem)
+
+
+def create_sub_listitem(file_name):
+    listitem = xbmcgui.ListItem(label='English', label2=file_name)
+    list_item.setArt(
+        {'thumb': xbmc.convertLanguage('en', xbmc.ISO_639_1)}
+    )
+    return listitem
+
+
+def use_subtitle(location):
+    listitem = xbmcgui.ListItem(label=location)
+    add_directory_item(listitem, location)
 
 
 def download(url):
-    # debuglog('download')
-    # loginfos()
-    cleanup_temp()
-
-    listitem = xbmcgui.ListItem(label=url)
-    xbmcplugin.addDirectoryItem(
-        handle=__addon_handle__,
-        url=url,
-        listitem=listitem)
+    # cleanup_temp()
+    # download
+    use_subtitle(url)
 
 
 def longes_common_subsequence(s1, s2):
@@ -114,17 +127,27 @@ def longes_common_subsequence(s1, s2):
     return len(cs), cs
 
 
+def parse_arguments(args):
+    # action=search&languages=English&preferredlanguage=English
+    return dict(parse_qsl(args))
+
+
 if __name__ == '__main__':
-    params = dict(parse_qsl(sys.argv[2][1:]))
     loginfos()
+
+    params = parse_arguments(sys.argv[2][1:])
 
     if params['action'] == 'search':
         search()
     elif params['action'] == 'download':
         url = unquote_plus(params['url'])
         download(url)
+    elif params['action'] == 'use':
+        location = unquote_plus(params['location'])
+        use_subtitle(location)
+    elif:
+        exit('Unknow action')
 
-    # ?action=search&languages=English&preferredlanguage=English
     xbmcplugin.endOfDirectory(__addon_handle__)
 
 # class logger:
