@@ -93,7 +93,7 @@ def add_directory_item(listitem, url):
 
 def create_sub_listitem(file_name):
     listitem = xbmcgui.ListItem(label='English', label2=file_name)
-    list_item.setArt(
+    listitem.setArt(
         {'thumb': xbmc.convertLanguage('en', xbmc.ISO_639_1)}
     )
     return listitem
@@ -145,7 +145,7 @@ if __name__ == '__main__':
     elif params['action'] == 'use':
         location = unquote_plus(params['location'])
         use_subtitle(location)
-    elif:
+    else:
         exit('Unknow action')
 
     xbmcplugin.endOfDirectory(__addon_handle__)
