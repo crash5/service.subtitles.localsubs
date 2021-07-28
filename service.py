@@ -74,14 +74,14 @@ def search():
     # file_name = xbmc.getInfoLabel("VideoPlayer.Title")
     # file_name = xbmc.getCleanMovieTitle(xbmc.Player().getPlayingFile(), True)
 
+    dirs = [
+        xbmcvfs.translatePath('special://subtitles'),
+        os.path.join(file_path, 'Subs', file_no_ext)
+    ]
 
-    # kodi_subtitle_dir = xbmcvfs.translatePath('special://subtitles')
-    # if xbmcvfs.exists(kodi_subtitle_dir):
-    #     add_sub_from_dir(kodi_subtitle_dir)
-
-    under_subs_dir = os.path.join(file_path, 'Subs', file_no_ext) 
-    if xbmcvfs.exists(under_subs_dir + '/'):
-        add_sub_from_dir(under_subs_dir)
+    for dir in dirs:
+        if xbmcvfs.exists(dir + '/'):
+            add_sub_from_dir(dir)
 
 
 # def cleanup_temp():
