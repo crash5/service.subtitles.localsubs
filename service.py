@@ -10,6 +10,8 @@ import xbmcgui
 
 from urllib.parse import urlencode, unquote_plus, parse_qsl
 
+from pathlib import Path
+
 
 __addon__ = xbmcaddon.Addon()
 __scriptid__ = __addon__.getAddonInfo('id')
@@ -40,18 +42,10 @@ def loginfos():
     debuglog(f'Clean title: {xbmc.getCleanMovieTitle(xbmc.Player().getPlayingFile(), True)}')
 
 
-def search():
-    # file_path = os.path.dirname(xbmc.Player().getPlayingFile())
-    # file_name = xbmc.getInfoLabel("VideoPlayer.Title")
-    # subtitle_dir = os.path.dirname(file_path) + '/subs'
-
+def add_sub_from_dir(subtitle_dir):
     file_name = xbmc.getCleanMovieTitle(xbmc.Player().getPlayingFile(), True)
 
-    subtitle_dir = xbmcvfs.translatePath('special://subtitles')
-    if not xbmcvfs.exists(subtitle_dir):
-        return
-
-    (dirs, files) = xbmcvfs.listdir(subtitle_dir)
+    (_, files) = xbmcvfs.listdir(subtitle_dir)
 
     sorted_names = sorted(
         files,
@@ -69,6 +63,25 @@ def search():
             create_sub_listitem(file),
             create_plugin_url(params)
         )
+
+
+def search():
+    file_path = os.path.dirname(xbmc.Player().getPlayingFile())
+
+    full_path = Path(xbmc.Player().getPlayingFile())
+    file_no_ext = full_path.with_suffix('').name
+
+    # file_name = xbmc.getInfoLabel("VideoPlayer.Title")
+    # file_name = xbmc.getCleanMovieTitle(xbmc.Player().getPlayingFile(), True)
+
+
+    # kodi_subtitle_dir = xbmcvfs.translatePath('special://subtitles')
+    # if xbmcvfs.exists(kodi_subtitle_dir):
+    #     add_sub_from_dir(kodi_subtitle_dir)
+
+    under_subs_dir = os.path.join(file_path, 'Subs', file_no_ext) 
+    if xbmcvfs.exists(under_subs_dir + '/'):
+        add_sub_from_dir(under_subs_dir)
 
 
 # def cleanup_temp():
