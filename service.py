@@ -1,29 +1,25 @@
 import sys
 import os
+from urllib.parse import urlencode, unquote_plus, parse_qsl
+from pathlib import Path
+from collections import namedtuple
 
 import xbmc
 import xbmcaddon
 import xbmcvfs
-
 import xbmcplugin
 import xbmcgui
-
-from urllib.parse import urlencode, unquote_plus, parse_qsl
-
-from pathlib import Path
 
 
 __addon__ = xbmcaddon.Addon()
 __scriptid__ = __addon__.getAddonInfo('id')
-__scriptname__ = __addon__.getAddonInfo('name')
-__version__ = __addon__.getAddonInfo('version')
-__language__ = __addon__.getLocalizedString
-
-__cwd__ = xbmcvfs.translatePath(__addon__.getAddonInfo('path'))
 __profile__ = xbmcvfs.translatePath(__addon__.getAddonInfo('profile'))
 __temp__ = xbmcvfs.translatePath(os.path.join(__profile__, 'temp', ''))
 
 __addon_handle__ = int(sys.argv[1])
+
+
+Subtitle = namedtuple('Subtitle', ['file_name', 'location', 'language'])
 
 
 def debuglog(msg):
@@ -42,32 +38,14 @@ def loginfos():
     debuglog(f'Clean title: {xbmc.getCleanMovieTitle(xbmc.Player().getPlayingFile(), True)}')
 
 
-def add_sub_from_dir(subtitle_dir):
-    file_name = xbmc.getCleanMovieTitle(xbmc.Player().getPlayingFile(), True)
-
-    (_, files) = xbmcvfs.listdir(subtitle_dir)
-
-    sorted_names = sorted(
-        files,
-        key=lambda x: longes_common_subsequence(file_name[0], x)[0],
-        reverse=True)
-
-    for file in sorted_names:
-        location = os.path.join(subtitle_dir, file)
-
-        params = {
-            'action': 'use',
-            'location': location}
-
-        add_directory_item(
-            create_sub_listitem(file),
-            create_plugin_url(params)
-        )
+##### Operations
+def use_subtitle(location):
+    listitem = xbmcgui.ListItem(label=location)
+    add_directory_item(listitem, location)
 
 
 def search():
     file_path = os.path.dirname(xbmc.Player().getPlayingFile())
-
     full_path = Path(xbmc.Player().getPlayingFile())
     file_no_ext = full_path.with_suffix('').name
 
@@ -79,21 +57,57 @@ def search():
         os.path.join(file_path, 'Subs', file_no_ext)
     ]
 
+    subtitles = []
     for dir in dirs:
         if xbmcvfs.exists(dir + '/'):
-            add_sub_from_dir(dir)
+            subtitles += collect_subs_from_directory(dir)
+    # TODO: sort subs
+    add_subtitles_to_ui(subtitles)
+#####
 
 
-# def cleanup_temp():
-#     location = __temp__
-#     if xbmcvfs.exists(location):
-#         (dirs, files) = xbmcvfs.listdir(location)
-#         for file in files:
-#             xbmcvfs.delete(os.path.join(location, file))
-#         for dir in dirs:
-#             xbmcvfs.rmdir(os.path.join(location, dir), force=True)
-#     else:
-#         xbmcvfs.mkdirs(location)
+def collect_subs_from_directory(subtitle_dir):
+    files = get_files_from_directory(subtitle_dir)
+    subtitle_files = filter(is_subtitle, files)
+
+    subtitles = []
+    for file_name in subtitle_files:
+        location = os.path.join(subtitle_dir, file_name)
+        # TODO: determine language if possible
+        language = 'English'
+        subtitles += Subtitle(file_name, location, language)
+
+    return subtitles
+
+
+def get_files_from_directory(directory):
+    (_, files) = xbmcvfs.listdir(subtitle_dir)
+    return files
+
+
+def is_subtitle(file):
+    return file.endswith('.srt')
+
+
+def add_subtitles_to_ui(subtitles):
+    map(add_subtitle_to_ui, subtitles)
+
+
+def add_subtitle_to_ui(subtitle):
+    listitem = xbmcgui.ListItem(label=subtitle.language, label2=subtitle.file_name)
+    listitem.setArt(
+        {'thumb': xbmc.convertLanguage(subtitle.language, xbmc.ISO_639_1)}
+    )
+    url = create_use_subtitle_url(subtitle.location)
+    add_directory_item(listitem, url)
+
+
+def create_use_subtitle_url(location):
+    params = {
+        'action': 'use',
+        'location': location
+    }
+    return create_plugin_url(params)
 
 
 def create_plugin_url(params):
@@ -102,42 +116,6 @@ def create_plugin_url(params):
 
 def add_directory_item(listitem, url):
     xbmcplugin.addDirectoryItem(handle=__addon_handle__, url=url, listitem=listitem)
-
-
-def create_sub_listitem(file_name):
-    listitem = xbmcgui.ListItem(label='English', label2=file_name)
-    listitem.setArt(
-        {'thumb': xbmc.convertLanguage('en', xbmc.ISO_639_1)}
-    )
-    return listitem
-
-
-def use_subtitle(location):
-    listitem = xbmcgui.ListItem(label=location)
-    add_directory_item(listitem, location)
-
-
-def download(url):
-    # cleanup_temp()
-    # download
-    use_subtitle(url)
-
-
-def longes_common_subsequence(s1, s2):
-    matrix = [["" for x in range(len(s2))] for x in range(len(s1))]
-    for i in range(len(s1)):
-        for j in range(len(s2)):
-            if s1[i] == s2[j]:
-                if i == 0 or j == 0:
-                    matrix[i][j] = s1[i]
-                else:
-                    matrix[i][j] = matrix[i-1][j-1] + s1[i]
-            else:
-                matrix[i][j] = max(matrix[i-1][j], matrix[i][j-1], key=len)
-
-    cs = matrix[-1][-1]
-
-    return len(cs), cs
 
 
 def parse_arguments(args):
@@ -152,9 +130,6 @@ if __name__ == '__main__':
 
     if params['action'] == 'search':
         search()
-    elif params['action'] == 'download':
-        url = unquote_plus(params['url'])
-        download(url)
     elif params['action'] == 'use':
         location = unquote_plus(params['location'])
         use_subtitle(location)
@@ -180,3 +155,31 @@ if __name__ == '__main__':
 #     def debug(message):
 #         logger.log(message, xbmc.LOGDEBUG)
 
+
+# def longes_common_subsequence(s1, s2):
+#     matrix = [["" for x in range(len(s2))] for x in range(len(s1))]
+#     for i in range(len(s1)):
+#         for j in range(len(s2)):
+#             if s1[i] == s2[j]:
+#                 if i == 0 or j == 0:
+#                     matrix[i][j] = s1[i]
+#                 else:
+#                     matrix[i][j] = matrix[i-1][j-1] + s1[i]
+#             else:
+#                 matrix[i][j] = max(matrix[i-1][j], matrix[i][j-1], key=len)
+
+#     cs = matrix[-1][-1]
+
+#     return len(cs), cs
+
+
+# def cleanup_temp():
+#     location = __temp__
+#     if xbmcvfs.exists(location):
+#         (dirs, files) = xbmcvfs.listdir(location)
+#         for file in files:
+#             xbmcvfs.delete(os.path.join(location, file))
+#         for dir in dirs:
+#             xbmcvfs.rmdir(os.path.join(location, dir), force=True)
+#     else:
+#         xbmcvfs.mkdirs(location)
