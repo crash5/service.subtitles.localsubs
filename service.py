@@ -59,11 +59,9 @@ def search():
 
     subtitles = []
     for dir in dirs:
-        # for network location it is faster to try without checkin the existence
-        # if xbmcvfs.exists(dir + '/'):
         subtitles.extend(collect_subs_from_directory(dir))
-    # TODO: sort subs
-    add_subtitles_to_ui(subtitles)
+    sorted_subtitles = sorted(subtitles, key=get_subtitle_weight, reverse=True)
+    add_subtitles_to_ui(sorted_subtitles)
 #####
 
 
@@ -88,6 +86,28 @@ def get_files_from_directory(directory):
 
 def is_subtitle(file):
     return file.endswith('.srt')
+
+
+def get_subtitle_weight(subtitle):
+    file_name = xbmc.getCleanMovieTitle(xbmc.Player().getPlayingFile())[0]
+    # TODO: add additional weight to local subtitle
+    return longes_common_subsequence(file_name, subtitle.file_name)[0]
+
+
+# source: https://stackoverflow.com/q/67155579
+def longes_common_subsequence(s1, s2):
+    matrix = [[[] for x in range(len(s2))] for x in range(len(s1))]
+    for i in range(len(s1)):
+        for j in range(len(s2)):
+            if s1[i] == s2[j]:
+                if i == 0 or j == 0:
+                    matrix[i][j] = [s1[i]]
+                else:
+                    matrix[i][j] = matrix[i - 1][j - 1] + [s1[i]]
+            else:
+                matrix[i][j] = max(matrix[i - 1][j], matrix[i][j - 1], key=len)
+    cs = matrix[-1][-1]
+    return len(cs), ''.join(cs)
 
 
 def add_subtitles_to_ui(subtitles):
@@ -157,22 +177,6 @@ if __name__ == '__main__':
 #     def debug(message):
 #         logger.log(message, xbmc.LOGDEBUG)
 
-
-# def longes_common_subsequence(s1, s2):
-#     matrix = [["" for x in range(len(s2))] for x in range(len(s1))]
-#     for i in range(len(s1)):
-#         for j in range(len(s2)):
-#             if s1[i] == s2[j]:
-#                 if i == 0 or j == 0:
-#                     matrix[i][j] = s1[i]
-#                 else:
-#                     matrix[i][j] = matrix[i-1][j-1] + s1[i]
-#             else:
-#                 matrix[i][j] = max(matrix[i-1][j], matrix[i][j-1], key=len)
-
-#     cs = matrix[-1][-1]
-
-#     return len(cs), cs
 
 
 # def cleanup_temp():
