@@ -60,7 +60,7 @@ def search():
     subtitles = []
     for dir in dirs:
         if xbmcvfs.exists(dir + '/'):
-            subtitles += collect_subs_from_directory(dir)
+            subtitles.extend(collect_subs_from_directory(dir))
     # TODO: sort subs
     add_subtitles_to_ui(subtitles)
 #####
@@ -75,13 +75,13 @@ def collect_subs_from_directory(subtitle_dir):
         location = os.path.join(subtitle_dir, file_name)
         # TODO: determine language if possible
         language = 'English'
-        subtitles += Subtitle(file_name, location, language)
+        subtitles.append(Subtitle(file_name, location, language))
 
     return subtitles
 
 
 def get_files_from_directory(directory):
-    (_, files) = xbmcvfs.listdir(subtitle_dir)
+    (_, files) = xbmcvfs.listdir(directory)
     return files
 
 
@@ -90,7 +90,8 @@ def is_subtitle(file):
 
 
 def add_subtitles_to_ui(subtitles):
-    map(add_subtitle_to_ui, subtitles)
+    for subtitle in subtitles:
+        add_subtitle_to_ui(subtitle)
 
 
 def add_subtitle_to_ui(subtitle):
