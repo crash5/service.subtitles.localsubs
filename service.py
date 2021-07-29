@@ -35,7 +35,8 @@ def loginfos():
     debuglog(f'VideoPlayer.TVshowtitle: {xbmc.getInfoLabel("VideoPlayer.TVshowtitle")}')
     debuglog(f'VideoPlayer.Season: {xbmc.getInfoLabel("VideoPlayer.Season")}')
     debuglog(f'VideoPlayer.Episode: {xbmc.getInfoLabel("VideoPlayer.Episode")}')
-    debuglog(f'Clean title: {xbmc.getCleanMovieTitle(xbmc.Player().getPlayingFile(), True)}')
+    debuglog(f'Clean title by parent dir: {xbmc.getCleanMovieTitle(xbmc.Player().getPlayingFile(), True)}')
+    debuglog(f'Clean title: {xbmc.getCleanMovieTitle(xbmc.Player().getPlayingFile())}')
 
 
 ##### Operations
