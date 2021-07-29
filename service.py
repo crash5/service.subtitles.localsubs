@@ -54,13 +54,14 @@ def search():
 
     dirs = [
         xbmcvfs.translatePath('special://subtitles'),
-        os.path.join(file_path, 'Subs', file_no_ext)
+        os.path.join(file_path, 'Subs', file_no_ext),
     ]
 
     subtitles = []
     for dir in dirs:
-        if xbmcvfs.exists(dir + '/'):
-            subtitles.extend(collect_subs_from_directory(dir))
+        # for network location it is faster to try without checkin the existence
+        # if xbmcvfs.exists(dir + '/'):
+        subtitles.extend(collect_subs_from_directory(dir))
     # TODO: sort subs
     add_subtitles_to_ui(subtitles)
 #####
@@ -135,7 +136,7 @@ if __name__ == '__main__':
         location = unquote_plus(params['location'])
         use_subtitle(location)
     else:
-        exit('Unknow action')
+        exit('Unknown action')
 
     xbmcplugin.endOfDirectory(__addon_handle__)
 
