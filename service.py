@@ -73,11 +73,22 @@ def collect_subs_from_directory(subtitle_dir):
     subtitles = []
     for file_name in subtitle_files:
         location = os.path.join(subtitle_dir, file_name)
-        # TODO: determine language if possible
-        language = 'English'
+        language = get_language_from_name(file_name)
         subtitles.append(Subtitle(file_name, location, language))
 
     return subtitles
+
+
+def get_language_from_name(file_name):
+    name_wo_extension = file_name[:-4]
+    split_on = ['.', '_', '-']
+    for split_character in split_on:
+        language_name = name_wo_extension.rsplit(split_character, 1)[-1:][0]
+        language = xbmc.convertLanguage(language_name, xbmc.ENGLISH_NAME)
+        if language:
+            return language
+
+    return 'English'
 
 
 def get_files_from_directory(directory):
